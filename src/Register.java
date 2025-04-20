@@ -1,6 +1,7 @@
 import org.mindrot.jbcrypt.BCrypt;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -11,12 +12,18 @@ public class Register extends JFrame {
     private JButton registerButton;
     private JPanel panel;
     private JButton loginInsteadButton;
+    private JLabel img;
 
     public Register() {
         setSize(500, 500);
         setContentPane(panel);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
+
+        ImageIcon registerIcon = new ImageIcon("src/register.png");  // Path to the register image
+        Image imgResized = registerIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);  // Resize to 150x150
+        JLabel imageLabel = new JLabel(new ImageIcon(imgResized));  // Set the resized image to JLabel
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
 
         registerButton.addActionListener(new ActionListener() {
             @Override

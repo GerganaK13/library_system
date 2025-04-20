@@ -7,12 +7,17 @@ public class login extends JFrame {
     private JTextField textField1; // UserID
     private JButton loginButton;
     private JPanel panel;
+    private JLabel img;
 
     public login() {
         setSize(500, 500);
         setContentPane(panel);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
+
+        ImageIcon logoIcon = new ImageIcon("src/login.jpg");  // Adjust the path to your image
+        JLabel imageLabel = new JLabel(logoIcon);
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
 
         loginButton.addActionListener(new ActionListener() {
             @Override

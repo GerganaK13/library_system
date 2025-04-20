@@ -5,6 +5,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -91,9 +92,8 @@ public class connect {
         }
     }
 
-    // Updated version without image
-    public static void addUser(int userID, String name, String role, String contact, int borrowLimit, String hashedPassword, Object unused) {
-        String query = "INSERT INTO Users (UserID, Name, Role, Contact, BorrowLimit, Password) VALUES (?, ?, ?, ?, ?, ?)";
+    public static void addUser(int userID, String name, String role, String contact, int borrowLimit, String hashedPassword, InputStream image) {
+        String query = "INSERT INTO Users (UserID, Name, Role, Contact, BorrowLimit, Password, Image) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -105,6 +105,7 @@ public class connect {
             pstmt.setString(4, contact);
             pstmt.setInt(5, borrowLimit);
             pstmt.setString(6, hashedPassword);
+            pstmt.setBlob(7, image);
 
             int rows = pstmt.executeUpdate();
             if (rows > 0) {
@@ -130,13 +131,14 @@ public class connect {
                 if (rs.next()) {
                     String hashedPassword = rs.getString("Password");
                     if (BCrypt.checkpw(password, hashedPassword)) {
+                        InputStream imgStream = rs.getBinaryStream("Image");
                         user = new User(
                                 rs.getInt("UserID"),
                                 rs.getString("Name"),
                                 rs.getString("Role"),
                                 rs.getString("Contact"),
                                 rs.getInt("BorrowLimit"),
-                                null
+                                imgStream
                         );
                     }
                 }
@@ -154,13 +156,15 @@ class User {
     private String role;
     private String contact;
     private int borrowLimit;
+    private InputStream img;
 
-    public User(int userID, String name, String role, String contact, int borrowLimit, Object unused) {
+    public User(int userID, String name, String role, String contact, int borrowLimit, InputStream img) {
         this.userID = userID;
         this.name = name;
         this.role = role;
         this.contact = contact;
         this.borrowLimit = borrowLimit;
+        this.img = img;
     }
 
     public int getUserID() {
@@ -184,6 +188,14 @@ class User {
     }
 
     public ImageIcon getImageIcon() {
-        return null; // Image removed
+        try {
+            if (img != null) {
+                BufferedImage image = ImageIO.read(img);
+                return new ImageIcon(image);
+            }
+        } catch (IOException e) {
+            System.out.println("Error loading image: " + e.getMessage());
+        }
+        return null;
     }
 }
