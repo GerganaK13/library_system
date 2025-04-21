@@ -23,7 +23,7 @@ public class BookForm extends JFrame {
         setLocationRelativeTo(null);
 
         panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBackground(new Color(245, 245, 245)); // light gray background
+        panel.setBackground(new Color(245, 245, 245)); 
 
         // --- Search panel ---
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -52,7 +52,7 @@ public class BookForm extends JFrame {
 
         panel.add(searchPanel, BorderLayout.NORTH);
 
-        // --- Table setup ---
+        //Table setup
         model = new DefaultTableModel();
         model.addColumn("ISBN");
         model.addColumn("Title");
@@ -68,7 +68,7 @@ public class BookForm extends JFrame {
         JScrollPane scrollPane = new JScrollPane(bookTable);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // --- Back button ---
+        //Back button
         backButton = new JButton("Back to Welcome");
         backButton.addActionListener(e -> goBackToWelcome());
         backButton.setPreferredSize(new Dimension(150, 30));
@@ -88,7 +88,7 @@ public class BookForm extends JFrame {
     }
 
     private void loadBooks() {
-        model.setRowCount(0); // Clear any existing rows
+        model.setRowCount(0); 
         String sql =
                 "SELECT b.ISBN, b.Title, b.Author, p.Name AS Publisher, c.CategoryName, b.Cond, "
                         + "COALESCE(SUM(CASE WHEN i.Status = 'Available' THEN 1 ELSE 0 END), 0) AS AvailableCopies "
@@ -111,7 +111,7 @@ public class BookForm extends JFrame {
                         rs.getString("Publisher"),
                         rs.getString("CategoryName"),
                         rs.getString("Cond"),
-                        rs.getInt("AvailableCopies")  // Display the available copies count
+                        rs.getInt("AvailableCopies")  
                 });
             }
         } catch (SQLException ex) {
@@ -120,7 +120,7 @@ public class BookForm extends JFrame {
     }
 
     private void searchBooks() {
-        model.setRowCount(0); // Clear any existing rows
+        model.setRowCount(0);
 
         String text = searchField.getText().trim();
         String cat  = (String) categoryFilter.getSelectedItem();
@@ -168,7 +168,7 @@ public class BookForm extends JFrame {
                             rs.getString("Publisher"),
                             rs.getString("CategoryName"),
                             rs.getString("Cond"),
-                            rs.getInt("AvailableCopies")  // Display available copies
+                            rs.getInt("AvailableCopies")  
                     });
                 }
             }
@@ -178,14 +178,13 @@ public class BookForm extends JFrame {
     }
 
     private void goBackToWelcome() {
-        // close BookForm...
+        // close BookForm
         dispose();
 
-        // ...and re-open Welcome with the same user
+        // and re-open Welcome with the same user
         new Welcome(currentUser);
     }
 
     public static void main(String[] args) {
-        // Test case can be added if needed
     }
 }
