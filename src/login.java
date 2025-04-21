@@ -18,10 +18,10 @@ public class login extends JFrame {
 
         panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(new Color(245, 245, 245)); // Light gray background
+        panel.setBackground(new Color(245, 245, 245)); 
 
         // Logo Image
-        ImageIcon logoIcon = new ImageIcon("src/photos/login.jpg");  // Adjust path as needed
+        ImageIcon logoIcon = new ImageIcon("src/photos/login.jpg");  
         JLabel imageLabel = new JLabel(logoIcon);
         imageLabel.setHorizontalAlignment(JLabel.CENTER);
         panel.add(imageLabel);
@@ -39,7 +39,7 @@ public class login extends JFrame {
         // Login Button
         loginButton = new JButton("Login");
         loginButton.setFont(new Font("Arial", Font.BOLD, 14));
-        loginButton.setBackground(new Color(0, 102, 204));  // Blue background
+        loginButton.setBackground(new Color(0, 102, 204));  
         loginButton.setForeground(Color.WHITE);
         loginButton.setPreferredSize(new Dimension(200, 40));
         panel.add(loginButton);
