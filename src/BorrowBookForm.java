@@ -52,17 +52,17 @@ public class BorrowBookForm extends JFrame {
 
         borrowButton = new JButton("Borrow Book");
         borrowButton.setPreferredSize(new Dimension(150, 30));
-        borrowButton.setBackground(new Color(0, 102, 204));  // Blue background
+        borrowButton.setBackground(new Color(0, 102, 204));  
         borrowButton.setForeground(Color.WHITE);
 
         returnButton = new JButton("Return Book");
         returnButton.setPreferredSize(new Dimension(150, 30));
-        returnButton.setBackground(new Color(0, 153, 51));  // Green background
+        returnButton.setBackground(new Color(0, 153, 51)); 
         returnButton.setForeground(Color.WHITE);
 
         backButton = new JButton("Back to Menu");
         backButton.setPreferredSize(new Dimension(150, 30));
-        backButton.setBackground(new Color(255, 69, 0));  // Red background
+        backButton.setBackground(new Color(255, 69, 0));  
         backButton.setForeground(Color.WHITE);
 
         panel.add(userIdLabel);
