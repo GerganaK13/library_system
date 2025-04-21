@@ -24,9 +24,8 @@ public class FinesForm extends JFrame {
 
         panel = new JPanel();
         panel.setLayout(new BorderLayout(10, 10));
-        panel.setBackground(new Color(245, 245, 245)); // light gray background
-
-        // --- Search panel ---
+        panel.setBackground(new Color(245, 245, 245)); 
+        //Search panel 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchLabel = new JLabel("Search Fines:");
         searchLabel.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -39,13 +38,13 @@ public class FinesForm extends JFrame {
         searchButton = new JButton("Search");
         searchButton.setFont(new Font("Arial", Font.BOLD, 14));
         searchButton.setPreferredSize(new Dimension(100, 30));
-        searchButton.setBackground(new Color(0, 102, 204));  // Blue
+        searchButton.setBackground(new Color(0, 102, 204));  
         searchButton.setForeground(Color.WHITE);
         searchPanel.add(searchButton);
 
         panel.add(searchPanel, BorderLayout.NORTH);
 
-        // --- Table setup ---
+        // Table setup 
         model = new DefaultTableModel();
         model.addColumn("FineID");
         model.addColumn("Amount Due");
@@ -59,7 +58,7 @@ public class FinesForm extends JFrame {
         JScrollPane scrollPane = new JScrollPane(finesTable);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // --- Buttons ---
+        // Buttons
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         backButton = new JButton("Back to Menu");
         backButton.setPreferredSize(new Dimension(150, 30));
@@ -69,7 +68,7 @@ public class FinesForm extends JFrame {
 
         markPaidButton = new JButton("Mark Paid");
         markPaidButton.setPreferredSize(new Dimension(150, 30));
-        markPaidButton.setBackground(new Color(0, 153, 51));  // Green
+        markPaidButton.setBackground(new Color(0, 153, 51)); 
         markPaidButton.setForeground(Color.WHITE);
         bottomPanel.add(markPaidButton);
 
