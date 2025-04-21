@@ -16,7 +16,6 @@ public class Welcome extends JFrame {
     public Welcome(User user) {
         // Set up the main window
         this.currentUser = user;  // Set the current user
-            // The rest of your Welcome form code...
         setTitle("Welcome - Library Management System");
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -25,11 +24,11 @@ public class Welcome extends JFrame {
 
         // Create and customize the panel
         panel = new JPanel();
-        panel.setLayout(new GridLayout(7, 1, 10, 10)); // Increased rows to fit the new button
+        panel.setLayout(new GridLayout(7, 1, 10, 10));
         panel.setBackground(new Color(255, 228, 225));
 
         // Load and resize the logo image
-        ImageIcon logoIcon = new ImageIcon("src/photos/LetsMoveIcon.jpg"); // Path to the image file (update the path)
+        ImageIcon logoIcon = new ImageIcon("src/photos/LetsMoveIcon.jpg"); // Path to the image file
         if (logoIcon.getIconWidth() == -1) {
             System.out.println("Error loading image.");
         } else {
@@ -41,41 +40,41 @@ public class Welcome extends JFrame {
         // Add the welcome message
         first_name = new JLabel("Welcome to the Library Management System, " + user.getName() + "!");
         first_name.setFont(new Font("Arial", Font.BOLD, 18));
-        first_name.setForeground(new Color(0, 102, 204));  // Blue text
+        first_name.setForeground(new Color(0, 102, 204));  
         panel.add(first_name);
 
         // Set up and style buttons
         viewBooksButton = new JButton("View Books");
         viewBooksButton.setFont(new Font("Arial", Font.BOLD, 14));
-        viewBooksButton.setBackground(new Color(0, 102, 204));  // Blue background
+        viewBooksButton.setBackground(new Color(0, 102, 204));
         viewBooksButton.setForeground(Color.WHITE);
         viewBooksButton.setFocusPainted(false);
         panel.add(viewBooksButton);
 
         borrowBooksButton = new JButton("Borrow Books");
         borrowBooksButton.setFont(new Font("Arial", Font.BOLD, 14));
-        borrowBooksButton.setBackground(new Color(0, 153, 51));  // Green background
+        borrowBooksButton.setBackground(new Color(0, 153, 51)); 
         borrowBooksButton.setForeground(Color.WHITE);
         borrowBooksButton.setFocusPainted(false);
         panel.add(borrowBooksButton);
 
         viewFinesButton = new JButton("View Fines");
         viewFinesButton.setFont(new Font("Arial", Font.BOLD, 14));
-        viewFinesButton.setBackground(new Color(255, 140, 0));  // Orange background
+        viewFinesButton.setBackground(new Color(255, 140, 0));
         viewFinesButton.setForeground(Color.WHITE);
         viewFinesButton.setFocusPainted(false);
         panel.add(viewFinesButton);
 
         publishersButton = new JButton("View Publishers");
         publishersButton.setFont(new Font("Arial", Font.BOLD, 14));
-        publishersButton.setBackground(new Color(102, 51, 255));  // Purple background
+        publishersButton.setBackground(new Color(102, 51, 255)); 
         publishersButton.setForeground(Color.WHITE);
         publishersButton.setFocusPainted(false);
-        panel.add(publishersButton);  // Add the publishers button
+        panel.add(publishersButton);  
 
         logOutButton = new JButton("Log Out");
         logOutButton.setFont(new Font("Arial", Font.BOLD, 14));
-        logOutButton.setBackground(new Color(255, 69, 0));  // Red background
+        logOutButton.setBackground(new Color(255, 69, 0));  
         logOutButton.setForeground(Color.WHITE);
         logOutButton.setFocusPainted(false);
         panel.add(logOutButton);
@@ -93,7 +92,7 @@ public class Welcome extends JFrame {
         viewBooksButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new BookForm(user);  // Assuming you have a BookForm for displaying books
+                new BookForm(user); 
                 setVisible(false);  // Hide Welcome Form
             }
         });
@@ -101,7 +100,7 @@ public class Welcome extends JFrame {
         borrowBooksButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new BorrowBookForm(user);  // Assuming you have a BorrowBookForm
+                new BorrowBookForm(user); 
                 setVisible(false);  // Hide Welcome Form
             }
         });
@@ -109,7 +108,7 @@ public class Welcome extends JFrame {
         viewFinesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new FinesForm(user);  // Assuming you have a FinesForm
+                new FinesForm(user);  
                 setVisible(false);  // Hide Welcome Form
             }
         });
