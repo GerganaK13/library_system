@@ -11,46 +11,46 @@ public class PublisherForm extends JFrame {
     private JButton searchButton;
     private JTable publisherTable;
     private DefaultTableModel model;
-    private JButton backButton;  // Back to menu button
-    private User currentUser;    // Store the current user
+    private JButton backButton; 
+    private User currentUser;  
 
     public PublisherForm(User user) {
-        this.currentUser = user;  // Store the current user
+        this.currentUser = user; 
         setTitle("Publisher Information");
-        setSize(800, 500);  // Increased size to fit better in full screen
+        setSize(800, 500); 
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(true);
 
         panel = new JPanel();
         panel.setLayout(new BorderLayout(15, 15));
-        panel.setBackground(new Color(240, 240, 240)); // Light background color
+        panel.setBackground(new Color(240, 240, 240)); 
 
-        // --- Search panel ---
+        //Search panel
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));  // Align elements to the left with padding
-        searchPanel.setBackground(new Color(240, 240, 240)); // Match the background color
+        searchPanel.setBackground(new Color(240, 240, 240)); 
 
         searchLabel = new JLabel("Search Publisher:");
         searchLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        searchLabel.setForeground(new Color(0, 102, 204));  // Blue color for labels
+        searchLabel.setForeground(new Color(0, 102, 204));  
         searchPanel.add(searchLabel);
 
         searchField = new JTextField(20);
         searchField.setFont(new Font("Arial", Font.PLAIN, 14));
-        searchField.setBorder(BorderFactory.createLineBorder(new Color(0, 102, 204)));  // Blue border around the text field
+        searchField.setBorder(BorderFactory.createLineBorder(new Color(0, 102, 204))); 
         searchPanel.add(searchField);
 
         searchButton = new JButton("Search");
         searchButton.setFont(new Font("Arial", Font.BOLD, 14));
-        searchButton.setBackground(new Color(0, 102, 204));  // Blue background
+        searchButton.setBackground(new Color(0, 102, 204)); 
         searchButton.setForeground(Color.WHITE);
         searchButton.setFocusPainted(false);
         searchPanel.add(searchButton);
 
         panel.add(searchPanel, BorderLayout.NORTH);
 
-        // --- Table setup ---
+        // Table setup 
         model = new DefaultTableModel();
         model.addColumn("Publisher Name");
         model.addColumn("Contact");
@@ -61,10 +61,10 @@ public class PublisherForm extends JFrame {
         JScrollPane scrollPane = new JScrollPane(publisherTable);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // --- Back to menu button ---
+        // Back to menu button
         backButton = new JButton("Back to Menu");
         backButton.setFont(new Font("Arial", Font.BOLD, 14));
-        backButton.setBackground(new Color(255, 69, 0));  // Red background for back button
+        backButton.setBackground(new Color(255, 69, 0)); 
         backButton.setForeground(Color.WHITE);
         backButton.setFocusPainted(false);
         backButton.addActionListener(e -> goBackToMenu());
@@ -136,6 +136,5 @@ public class PublisherForm extends JFrame {
     }
 
     public static void main(String[] args) {
-        // Example user for testing, replace with actual login system
     }
 }
