@@ -11,41 +11,59 @@ public class BorrowBookForm extends JFrame {
     private JLabel issueDateLabel;
     private JLabel dueDateLabel;
     private JButton borrowButton;
+    private JButton returnButton;
     private JTextField userIdField;
     private JTextField isbnField;
     private JTextField issueDateField;
     private JTextField dueDateField;
+    private JButton backButton;
+    private User currentUser;
 
-    public BorrowBookForm() {
+    public BorrowBookForm(User user) {
+        this.currentUser = user;
         setTitle("Borrow Book");
-        setSize(500, 300);
+        setSize(600, 400);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        panel = new JPanel();
-        panel.setLayout(new GridLayout(5, 2, 10, 10));
+        panel = new JPanel(new GridLayout(6, 2, 10, 10));
+        panel.setBackground(new Color(245, 245, 245)); // light gray background
 
         userIdLabel = new JLabel("User ID:");
+        userIdLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         isbnLabel = new JLabel("ISBN:");
-        issueDateLabel = new JLabel("Issue Date (Auto-generated):");
-        dueDateLabel = new JLabel("Due Date (Auto-generated):");
+        isbnLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        issueDateLabel = new JLabel("Issue Date:");
+        issueDateLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        dueDateLabel = new JLabel("Due Date:");
+        dueDateLabel.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        userIdField = new JTextField(20);
-        isbnField = new JTextField(20);
-        issueDateField = new JTextField(20);
-        dueDateField = new JTextField(20);
+        userIdField = new JTextField();
+        userIdField.setPreferredSize(new Dimension(150, 30));
+        isbnField = new JTextField();
+        isbnField.setPreferredSize(new Dimension(150, 30));
+        issueDateField = new JTextField();
+        issueDateField.setPreferredSize(new Dimension(150, 30));
+        dueDateField = new JTextField();
+        dueDateField.setPreferredSize(new Dimension(150, 30));
 
         issueDateField.setEditable(false);  // Make issue date field uneditable
         dueDateField.setEditable(false);    // Make due date field uneditable
 
         borrowButton = new JButton("Borrow Book");
+        borrowButton.setPreferredSize(new Dimension(150, 30));
+        borrowButton.setBackground(new Color(0, 102, 204));  // Blue background
+        borrowButton.setForeground(Color.WHITE);
 
-        borrowButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                borrowBookToDatabase();
-            }
-        });
+        returnButton = new JButton("Return Book");
+        returnButton.setPreferredSize(new Dimension(150, 30));
+        returnButton.setBackground(new Color(0, 153, 51));  // Green background
+        returnButton.setForeground(Color.WHITE);
+
+        backButton = new JButton("Back to Menu");
+        backButton.setPreferredSize(new Dimension(150, 30));
+        backButton.setBackground(new Color(255, 69, 0));  // Red background
+        backButton.setForeground(Color.WHITE);
 
         panel.add(userIdLabel);
         panel.add(userIdField);
@@ -55,12 +73,16 @@ public class BorrowBookForm extends JFrame {
         panel.add(issueDateField);
         panel.add(dueDateLabel);
         panel.add(dueDateField);
-        panel.add(new JLabel());
         panel.add(borrowButton);
+        panel.add(returnButton);
+        panel.add(backButton);
 
         add(panel);
-
         setVisible(true);
+
+        borrowButton.addActionListener(e -> borrowBookToDatabase());
+        returnButton.addActionListener(e -> returnBookToDatabase());
+        backButton.addActionListener(e -> goBackToMenu());
     }
 
     private void borrowBookToDatabase() {
@@ -86,24 +108,41 @@ public class BorrowBookForm extends JFrame {
             issueDateField.setText(issueDate.toString());
             dueDateField.setText(dueDate.toString());
 
-            String query = "INSERT INTO Borrowing (UserID, ISBN, IssueDate, DueDate) VALUES (?, ?, ?, ?)";
-            try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "0000");
-                 PreparedStatement pstmt = connection.prepareStatement(query)) {
+            // Check if there is an available copy of the book
+            String checkAvailabilityQuery = "SELECT InventoryID FROM Inventory WHERE ISBN = ? AND Status = 'Available' LIMIT 1";
+            try (Connection connection = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/library", "root", "0000");
+                 PreparedStatement pstmt = connection.prepareStatement(checkAvailabilityQuery)) {
 
-                pstmt.setInt(1, Integer.parseInt(userId));
-                pstmt.setString(2, isbn);
-                pstmt.setDate(3, sqlIssueDate);
-                pstmt.setDate(4, sqlDueDate);
+                pstmt.setString(1, isbn);
+                ResultSet rs = pstmt.executeQuery();
 
-                int rows = pstmt.executeUpdate();
-                if (rows > 0) {
+                if (rs.next()) {
+                    // Found an available copy
+                    int inventoryId = rs.getInt("InventoryID");
+
+                    // Update the book copy status to "Borrowed"
+                    String updateCopyQuery = "UPDATE Inventory SET Status = 'Borrowed' WHERE InventoryID = ?";
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateCopyQuery)) {
+                        updateStmt.setInt(1, inventoryId);
+                        updateStmt.executeUpdate();
+                    }
+
+                    // Insert into the Borrowing table
+                    String borrowQuery = "INSERT INTO Borrowing (UserID, ISBN, InventoryID, IssueDate, DueDate) VALUES (?, ?, ?, ?, ?)";
+                    try (PreparedStatement borrowStmt = connection.prepareStatement(borrowQuery)) {
+                        borrowStmt.setInt(1, Integer.parseInt(userId));
+                        borrowStmt.setString(2, isbn);
+                        borrowStmt.setInt(3, inventoryId);  // Use InventoryID here
+                        borrowStmt.setDate(4, sqlIssueDate);
+                        borrowStmt.setDate(5, sqlDueDate);
+                        borrowStmt.executeUpdate();
+                    }
+
                     JOptionPane.showMessageDialog(null, "Book borrowed successfully!");
-
-                    // After borrowing the book, open the Welcome form
-                    new Welcome(new User(Integer.parseInt(userId), "", "", "", 0, null));  // Pass User object with ID
-                    dispose();  // Close the BorrowBookForm window
+                    goBackToMenu();  // Close the BorrowBookForm
                 } else {
-                    JOptionPane.showMessageDialog(null, "Error borrowing the book.");
+                    JOptionPane.showMessageDialog(null, "No available copies of this book.");
                 }
             } catch (SQLException ex) {
                 System.out.println("SQL Error: " + ex.getMessage());
@@ -113,7 +152,73 @@ public class BorrowBookForm extends JFrame {
         }
     }
 
+
+    private void returnBookToDatabase() {
+        String userId = userIdField.getText();
+        String isbn = isbnField.getText();
+
+        // Check if the fields are not empty
+        if (userId.isEmpty() || isbn.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Please fill in all required fields!");
+            return;
+        }
+
+        try {
+            // Retrieve the InventoryID from the Borrowing table for the given user and ISBN
+            String query = "SELECT br.InventoryID FROM Borrowing br "
+                    + "JOIN Inventory i ON br.InventoryID = i.InventoryID "
+                    + "WHERE br.UserID = ? AND br.ISBN = ? AND br.ReturnDate IS NULL LIMIT 1";
+
+            try (Connection connection = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/library", "root", "0000");
+                 PreparedStatement pstmt = connection.prepareStatement(query)) {
+
+                pstmt.setInt(1, Integer.parseInt(userId));
+                pstmt.setString(2, isbn);
+                ResultSet rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    // Found the borrowed copy
+                    int inventoryId = rs.getInt("InventoryID");
+
+                    // Update the book copy status to "Available"
+                    String updateCopyQuery = "UPDATE Inventory SET Status = 'Available' WHERE InventoryID = ?";
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateCopyQuery)) {
+                        updateStmt.setInt(1, inventoryId);
+                        updateStmt.executeUpdate();
+                    }
+
+                    // Update the Borrowing table with the return date
+                    String returnQuery = "UPDATE Borrowing SET ReturnDate = ? WHERE UserID = ? AND ISBN = ? AND InventoryID = ?";
+                    try (PreparedStatement returnStmt = connection.prepareStatement(returnQuery)) {
+                        returnStmt.setDate(1, java.sql.Date.valueOf(LocalDate.now()));
+                        returnStmt.setInt(2, Integer.parseInt(userId));
+                        returnStmt.setString(3, isbn);
+                        returnStmt.setInt(4, inventoryId);
+                        returnStmt.executeUpdate();
+                    }
+
+                    // Show success message and go back to menu
+                    JOptionPane.showMessageDialog(null, "Book returned successfully!");
+                    goBackToMenu();  // Go back to Welcome screen after successful return
+                } else {
+                    JOptionPane.showMessageDialog(null, "No borrowed copy found for this book.");
+                }
+            } catch (SQLException ex) {
+                System.out.println("SQL Error: " + ex.getMessage());
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Error in processing return: " + ex.getMessage());
+        }
+    }
+
+
+    private void goBackToMenu() {
+        dispose();
+        new Welcome(currentUser);
+    }
+
     public static void main(String[] args) {
-        new BorrowBookForm();
+        // Test case can be added if needed
     }
 }

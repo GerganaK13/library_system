@@ -1,19 +1,19 @@
 import org.mindrot.jbcrypt.BCrypt;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.ArrayList;
+import java.time.LocalDate;
 
 public class connect {
     private static final String URL = "jdbc:mysql://localhost:3306/library";
     private static final String USER = "root";
     private static final String PASSWORD = "0000";
 
+    // Execute SQL query and return results
     public static ArrayList<String[]> executeQuery(String query) {
         ArrayList<String[]> results = new ArrayList<>();
 
@@ -42,6 +42,7 @@ public class connect {
         return results;
     }
 
+    // Add a new column to the Users table
     public static void addColumn(String columnName, String dataType) {
         String query = "ALTER TABLE Users ADD COLUMN " + columnName + " " + dataType;
 
@@ -56,6 +57,7 @@ public class connect {
         }
     }
 
+    // Update user information in the Users table
     public static void updateUser(int userID, String[] columns, String[] newValues) {
         if (columns.length != newValues.length) {
             System.out.println("Error: Column count does not match value count.");
@@ -92,6 +94,7 @@ public class connect {
         }
     }
 
+    // Add a new user to the Users table
     public static void addUser(int userID, String name, String role, String contact, int borrowLimit, String hashedPassword, InputStream image) {
         String query = "INSERT INTO Users (UserID, Name, Role, Contact, BorrowLimit, Password, Image) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -119,6 +122,7 @@ public class connect {
         }
     }
 
+    // User login
     public static User login(String userID, String password) {
         User user = null;
         String query = "SELECT * FROM Users WHERE UserID = ?";
@@ -148,8 +152,94 @@ public class connect {
         }
         return user;
     }
-}
 
+    // Borrow a book
+    public static boolean borrowBook(int userId, String isbn) {
+        String query = "SELECT CopyID FROM BookCopies WHERE ISBN = ? AND Status = 'Available' LIMIT 1";
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = connection.prepareStatement(query)) {
+
+            pstmt.setString(1, isbn);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                // Found an available copy
+                int copyId = rs.getInt("CopyID");
+
+                // Update the book copy status to "Borrowed"
+                String updateCopyQuery = "UPDATE BookCopies SET Status = 'Borrowed' WHERE CopyID = ?";
+                try (PreparedStatement updateStmt = connection.prepareStatement(updateCopyQuery)) {
+                    updateStmt.setInt(1, copyId);
+                    updateStmt.executeUpdate();
+                }
+
+                // Add the borrowing record to the Borrowing table
+                String insertBorrowQuery = "INSERT INTO Borrowing (UserID, ISBN, CopyID, IssueDate, DueDate) VALUES (?, ?, ?, ?, ?)";
+                try (PreparedStatement borrowStmt = connection.prepareStatement(insertBorrowQuery)) {
+                    borrowStmt.setInt(1, userId);
+                    borrowStmt.setString(2, isbn);
+                    borrowStmt.setInt(3, copyId);
+                    borrowStmt.setDate(4, Date.valueOf(LocalDate.now()));
+                    borrowStmt.setDate(5, Date.valueOf(LocalDate.now().plusDays(30)));  // 30 days due date
+                    borrowStmt.executeUpdate();
+                }
+
+                // Successfully borrowed the book
+                return true;
+            } else {
+                System.out.println("No available copies of this book.");
+                return false;
+            }
+        } catch (SQLException e) {
+            System.out.println("Error borrowing book: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Return a book
+    public static boolean returnBook(int userId, String isbn) {
+        // Find the borrowed copy of the book
+        String query = "SELECT CopyID FROM Borrowing WHERE UserID = ? AND ISBN = ? AND ReturnDate IS NULL LIMIT 1";
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = connection.prepareStatement(query)) {
+
+            pstmt.setInt(1, userId);
+            pstmt.setString(2, isbn);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                int copyId = rs.getInt("CopyID");
+
+                // Update the book copy status to "Available"
+                String updateCopyQuery = "UPDATE BookCopies SET Status = 'Available' WHERE CopyID = ?";
+                try (PreparedStatement updateStmt = connection.prepareStatement(updateCopyQuery)) {
+                    updateStmt.setInt(1, copyId);
+                    updateStmt.executeUpdate();
+                }
+
+                // Update the Borrowing record with the return date
+                String returnQuery = "UPDATE Borrowing SET ReturnDate = ? WHERE UserID = ? AND ISBN = ? AND CopyID = ?";
+                try (PreparedStatement returnStmt = connection.prepareStatement(returnQuery)) {
+                    returnStmt.setDate(1, Date.valueOf(LocalDate.now()));
+                    returnStmt.setInt(2, userId);
+                    returnStmt.setString(3, isbn);
+                    returnStmt.setInt(4, copyId);
+                    returnStmt.executeUpdate();
+                }
+
+                // Successfully returned the book
+                return true;
+            } else {
+                System.out.println("No borrowed copy found for this book.");
+                return false;
+            }
+        } catch (SQLException e) {
+            System.out.println("Error returning book: " + e.getMessage());
+            return false;
+        }
+    }
+}
+// User class to store user data
 class User {
     private int userID;
     private String name;
@@ -199,3 +289,4 @@ class User {
         return null;
     }
 }
+

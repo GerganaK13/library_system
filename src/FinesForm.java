@@ -9,45 +9,43 @@ public class FinesForm extends JFrame {
     private JLabel searchLabel;
     private JTextField searchField;
     private JButton searchButton;
-    private JButton backButton;  // Button to go back to Welcome page
-    private JButton markPaidButton;  // Button to mark a fine as paid
+    private JButton backButton;
+    private JButton markPaidButton;
     private JTable finesTable;
     private final DefaultTableModel model;
+    private User currentUser;
 
-    public FinesForm() {
+    public FinesForm(User user) {
+        this.currentUser = user;
         setTitle("Search Fines");
-        setSize(600, 400);
+        setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         panel = new JPanel();
         panel.setLayout(new BorderLayout(10, 10));
+        panel.setBackground(new Color(245, 245, 245)); // light gray background
 
-        JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new FlowLayout());
-        searchLabel = new JLabel("Search Fines (by UserID, ISBN, or Status):");
+        // --- Search panel ---
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchLabel = new JLabel("Search Fines:");
+        searchLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         searchPanel.add(searchLabel);
 
         searchField = new JTextField(20);
+        searchField.setPreferredSize(new Dimension(300, 30));
         searchPanel.add(searchField);
 
         searchButton = new JButton("Search");
+        searchButton.setFont(new Font("Arial", Font.BOLD, 14));
+        searchButton.setPreferredSize(new Dimension(100, 30));
+        searchButton.setBackground(new Color(0, 102, 204));  // Blue
+        searchButton.setForeground(Color.WHITE);
         searchPanel.add(searchButton);
 
-        // Adding the back button to navigate to the Welcome form
-        backButton = new JButton("Back to Welcome");
-        backButton.addActionListener(e -> goBackToWelcome());
+        panel.add(searchPanel, BorderLayout.NORTH);
 
-        // Adding the markPaidButton to mark fines as paid
-        markPaidButton = new JButton("Mark Paid");
-        markPaidButton.addActionListener(e -> markFineAsPaid());
-
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.setLayout(new FlowLayout());
-        bottomPanel.add(backButton);
-        bottomPanel.add(markPaidButton);  // Add markPaidButton to bottom panel
-        panel.add(bottomPanel, BorderLayout.SOUTH);
-
+        // --- Table setup ---
         model = new DefaultTableModel();
         model.addColumn("FineID");
         model.addColumn("Amount Due");
@@ -61,11 +59,30 @@ public class FinesForm extends JFrame {
         JScrollPane scrollPane = new JScrollPane(finesTable);
         panel.add(scrollPane, BorderLayout.CENTER);
 
+        // --- Buttons ---
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        backButton = new JButton("Back to Menu");
+        backButton.setPreferredSize(new Dimension(150, 30));
+        backButton.setBackground(new Color(255, 69, 0));  // Red
+        backButton.setForeground(Color.WHITE);
+        bottomPanel.add(backButton);
+
+        markPaidButton = new JButton("Mark Paid");
+        markPaidButton.setPreferredSize(new Dimension(150, 30));
+        markPaidButton.setBackground(new Color(0, 153, 51));  // Green
+        markPaidButton.setForeground(Color.WHITE);
+        bottomPanel.add(markPaidButton);
+
+        panel.add(bottomPanel, BorderLayout.SOUTH);
+
         add(panel);
         setVisible(true);
 
         searchButton.addActionListener(e -> searchFines());
-        loadFines();  // Load all fines initially
+        backButton.addActionListener(e -> goBackToMenu());
+        markPaidButton.addActionListener(e -> markFineAsPaid());
+
+        loadFines();
     }
 
     private void loadFines() {
@@ -85,8 +102,8 @@ public class FinesForm extends JFrame {
                         rs.getString("Status"),
                         rs.getString("ISBN"),
                         rs.getString("Name"),
-                        rs.getDate("IssueDate"),   // Get Issue Date from Borrowing table
-                        rs.getDate("DueDate")      // Get Due Date from Borrowing table
+                        rs.getDate("IssueDate"),
+                        rs.getDate("DueDate")
                 };
                 model.addRow(row);
             }
@@ -134,12 +151,10 @@ public class FinesForm extends JFrame {
     }
 
     private void markFineAsPaid() {
-        // Get the selected fine from the table
         int selectedRow = finesTable.getSelectedRow();
         if (selectedRow >= 0) {
-            int fineID = (int) model.getValueAt(selectedRow, 0); // Get FineID
+            int fineID = (int) model.getValueAt(selectedRow, 0);
 
-            // SQL to update the status of the fine to "Paid"
             String updateQuery = "UPDATE Fines SET Status = 'Paid' WHERE FineID = ?";
             try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "0000");
                  PreparedStatement pstmt = connection.prepareStatement(updateQuery)) {
@@ -148,7 +163,7 @@ public class FinesForm extends JFrame {
                 int rowsUpdated = pstmt.executeUpdate();
                 if (rowsUpdated > 0) {
                     JOptionPane.showMessageDialog(null, "Fine marked as Paid!");
-                    loadFines();  // Reload fines after updating the status
+                    loadFines();
                 } else {
                     JOptionPane.showMessageDialog(null, "Error marking fine as paid.");
                 }
@@ -160,15 +175,8 @@ public class FinesForm extends JFrame {
         }
     }
 
-    private void goBackToWelcome() {
-        // Close the current FinesForm window
-        this.dispose();
-
-        // Open the Welcome page
-        new Welcome(new User(1, "John Doe", "Student", "johndoe@example.com", 5, null));  // Example user, replace with actual user object
-    }
-
-    public static void main(String[] args) {
-        new FinesForm();
+    private void goBackToMenu() {
+        dispose();
+        new Welcome(currentUser);
     }
 }

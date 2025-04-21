@@ -3,16 +3,14 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
-
-public class form1 extends JFrame {
-    private JPanel panel1;
+public class form1 extends JFrame { private JPanel panel1;
     private JTable table1;
-    private JComboBox<String> comboBox1;
+    private JComboBox comboBox1;
     private JButton addColumnButton;
-    private JComboBox<String> comboBox2;
-
+    private JComboBox comboBox2;
     public static DefaultTableModel model;
     private ArrayList<String[]> users;
+    private JButton backButton;
 
     public form1() {
         setSize(700, 400);

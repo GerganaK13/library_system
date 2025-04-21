@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import javax.swing.table.*;
+import javax.swing.table.DefaultTableModel;
 import java.sql.*;
 
 public class BookForm extends JFrame {
@@ -9,50 +8,51 @@ public class BookForm extends JFrame {
     private JLabel searchLabel;
     private JTextField searchField;
     private JButton searchButton;
-    private JButton backButton;  // Button to go back to Welcome page
+    private JButton backButton;
     private JTable bookTable;
     private final DefaultTableModel model;
-
     private JComboBox<String> categoryFilter;
+    private final User currentUser;
 
+    public BookForm(User user) {
+        this.currentUser = user;
 
-    public BookForm() {
         setTitle("Browse Books");
-        setSize(600, 400);
+        setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        panel = new JPanel();
-        panel.setLayout(new BorderLayout(10, 10));
+        panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(new Color(245, 245, 245)); // light gray background
 
-        JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new FlowLayout());
+        // --- Search panel ---
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchLabel = new JLabel("Search Books:");
+        searchLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        searchLabel.setPreferredSize(new Dimension(100, 30));
         searchPanel.add(searchLabel);
 
-        searchField = new JTextField(20);
+        searchField = new JTextField(30);
+        searchField.setPreferredSize(new Dimension(300, 30));
         searchPanel.add(searchField);
 
         searchButton = new JButton("Search");
+        searchButton.setPreferredSize(new Dimension(100, 30));
+        searchButton.setFont(new Font("Arial", Font.BOLD, 14));
+        searchButton.setBackground(new Color(0, 102, 204));  // Blue
+        searchButton.setForeground(Color.WHITE);
         searchPanel.add(searchButton);
 
-        // Add combo boxes for filtering by Category, Publisher, and Availability
-        categoryFilter = new JComboBox<>(new String[] { "All Categories", "Fiction", "Science", "History" });
-
-
+        categoryFilter = new JComboBox<>(new String[] {
+                "All Categories", "Fiction", "Science", "History"
+        });
+        categoryFilter.setFont(new Font("Arial", Font.PLAIN, 14));
+        categoryFilter.setPreferredSize(new Dimension(150, 30));
         searchPanel.add(categoryFilter);
 
         panel.add(searchPanel, BorderLayout.NORTH);
 
-        // Adding the back button to navigate to the Welcome form
-        backButton = new JButton("Back to Welcome");
-        backButton.addActionListener(e -> goBackToWelcome());
-
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.setLayout(new FlowLayout());
-        bottomPanel.add(backButton);
-        panel.add(bottomPanel, BorderLayout.SOUTH);
-
+        // --- Table setup ---
         model = new DefaultTableModel();
         model.addColumn("ISBN");
         model.addColumn("Title");
@@ -60,38 +60,59 @@ public class BookForm extends JFrame {
         model.addColumn("Publisher");
         model.addColumn("Category");
         model.addColumn("Condition");
-        model.addColumn("Availability");
+        model.addColumn("Available Copies");
+
         bookTable = new JTable(model);
+        bookTable.setFont(new Font("Arial", Font.PLAIN, 14));
+        bookTable.setRowHeight(30);
         JScrollPane scrollPane = new JScrollPane(bookTable);
         panel.add(scrollPane, BorderLayout.CENTER);
+
+        // --- Back button ---
+        backButton = new JButton("Back to Welcome");
+        backButton.addActionListener(e -> goBackToWelcome());
+        backButton.setPreferredSize(new Dimension(150, 30));
+        backButton.setFont(new Font("Arial", Font.BOLD, 14));
+        backButton.setBackground(new Color(255, 69, 0));  // Red
+        backButton.setForeground(Color.WHITE);
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        bottomPanel.add(backButton);
+        panel.add(bottomPanel, BorderLayout.SOUTH);
 
         add(panel);
         setVisible(true);
 
+        // Wire up actions
         searchButton.addActionListener(e -> searchBooks());
         loadBooks();
     }
 
     private void loadBooks() {
-        model.setRowCount(0);
-        String query = "SELECT ISBN, Title, Author, Name AS Publisher, CategoryName, Cond, Availability FROM Books "
-                + "JOIN Publishers ON Books.PublisherID = Publishers.PublisherID "
-                + "JOIN Categories ON Books.CategoryID = Categories.CategoryID";
-        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "0000");
-             PreparedStatement pstmt = connection.prepareStatement(query);
-             ResultSet rs = pstmt.executeQuery()) {
+        model.setRowCount(0); // Clear any existing rows
+        String sql =
+                "SELECT b.ISBN, b.Title, b.Author, p.Name AS Publisher, c.CategoryName, b.Cond, "
+                        + "COALESCE(SUM(CASE WHEN i.Status = 'Available' THEN 1 ELSE 0 END), 0) AS AvailableCopies "
+                        + "FROM Books b "
+                        + "JOIN Publishers p ON b.PublisherID = p.PublisherID "
+                        + "JOIN Categories c ON b.CategoryID = c.CategoryID "
+                        + "LEFT JOIN Inventory i ON b.ISBN = i.ISBN "
+                        + "GROUP BY b.ISBN, b.Title, b.Author, p.Name, c.CategoryName, b.Cond";
+
+        try (Connection c = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/library", "root", "0000");
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                Object[] row = new Object[]{
+                model.addRow(new Object[]{
                         rs.getString("ISBN"),
                         rs.getString("Title"),
                         rs.getString("Author"),
                         rs.getString("Publisher"),
                         rs.getString("CategoryName"),
-                        rs.getString("Cond"),  // Now escaped correctly
-                        rs.getString("Availability")
-                };
-                model.addRow(row);
+                        rs.getString("Cond"),
+                        rs.getInt("AvailableCopies")  // Display the available copies count
+                });
             }
         } catch (SQLException ex) {
             System.out.println("SQL Error: " + ex.getMessage());
@@ -99,71 +120,72 @@ public class BookForm extends JFrame {
     }
 
     private void searchBooks() {
-        String searchQuery = searchField.getText();
-        String categoryFilterSelected = categoryFilter.getSelectedItem().toString();
+        model.setRowCount(0); // Clear any existing rows
 
-        StringBuilder queryBuilder = new StringBuilder("SELECT ISBN, Title, Author, Name AS Publisher, CategoryName, Cond, Availability FROM Books "
-                + "JOIN Publishers ON Books.PublisherID = Publishers.PublisherID "
-                + "JOIN Categories ON Books.CategoryID = Categories.CategoryID WHERE");
+        String text = searchField.getText().trim();
+        String cat  = (String) categoryFilter.getSelectedItem();
 
-        boolean firstCondition = true;
+        StringBuilder sb = new StringBuilder(
+                "SELECT b.ISBN, b.Title, b.Author, p.Name AS Publisher, c.CategoryName, b.Cond, "
+                        + "COALESCE(SUM(CASE WHEN i.Status = 'Available' THEN 1 ELSE 0 END), 0) AS AvailableCopies "
+                        + "FROM Books b "
+                        + "JOIN Publishers p ON b.PublisherID = p.PublisherID "
+                        + "JOIN Categories c ON b.CategoryID = c.CategoryID "
+                        + "LEFT JOIN Inventory i ON b.ISBN = i.ISBN "
+        );
 
-        if (!searchQuery.isEmpty()) {
-            queryBuilder.append(" (Title LIKE ? OR Author LIKE ?)");
-            firstCondition = false;
+        boolean hasWhere = false;
+        if (!text.isEmpty()) {
+            sb.append(" WHERE (Title LIKE ? OR Author LIKE ?)");
+            hasWhere = true;
+        }
+        if (!"All Categories".equals(cat)) {
+            sb.append(hasWhere ? " AND " : " WHERE ")
+                    .append("CategoryName = ?");
         }
 
-        if (!categoryFilterSelected.equals("All Categories")) {
-            if (!firstCondition) queryBuilder.append(" AND");
-            queryBuilder.append(" CategoryName = ?");
-            firstCondition = false;
-        }
+        sb.append(" GROUP BY b.ISBN, b.Title, b.Author, p.Name, c.CategoryName, b.Cond");
 
+        try (Connection c = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/library", "root", "0000");
+             PreparedStatement ps = c.prepareStatement(sb.toString())) {
 
-        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/library", "root", "0000");
-             PreparedStatement pstmt = connection.prepareStatement(queryBuilder.toString())) {
-
-            int paramIndex = 1;
-            if (!searchQuery.isEmpty()) {
-                pstmt.setString(paramIndex++, "%" + searchQuery + "%");
-                pstmt.setString(paramIndex++, "%" + searchQuery + "%");
+            int idx = 1;
+            if (!text.isEmpty()) {
+                ps.setString(idx++, "%" + text + "%");
+                ps.setString(idx++, "%" + text + "%");
+            }
+            if (!"All Categories".equals(cat)) {
+                ps.setString(idx, cat);
             }
 
-            if (!categoryFilterSelected.equals("All Categories")) {
-                pstmt.setString(paramIndex++, categoryFilterSelected);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    model.addRow(new Object[]{
+                            rs.getString("ISBN"),
+                            rs.getString("Title"),
+                            rs.getString("Author"),
+                            rs.getString("Publisher"),
+                            rs.getString("CategoryName"),
+                            rs.getString("Cond"),
+                            rs.getInt("AvailableCopies")  // Display available copies
+                    });
+                }
             }
-
-            ResultSet rs = pstmt.executeQuery();
-
-            model.setRowCount(0);  // Clear the existing data
-
-            while (rs.next()) {
-                Object[] row = new Object[]{
-                        rs.getString("ISBN"),
-                        rs.getString("Title"),
-                        rs.getString("Author"),
-                        rs.getString("Publisher"),
-                        rs.getString("CategoryName"),
-                        rs.getString("Cond"),
-                        rs.getString("Availability")
-                };
-                model.addRow(row);
-            }
-
         } catch (SQLException ex) {
             System.out.println("SQL Error: " + ex.getMessage());
         }
     }
 
     private void goBackToWelcome() {
-        // Close the current BookForm window
-        this.dispose();
+        // close BookForm...
+        dispose();
 
-        // Create a new instance of the Welcome form (pass the user details if needed)
-        // Assuming you have a User object to pass, if not, you can pass a default object
+        // ...and re-open Welcome with the same user
+        new Welcome(currentUser);
     }
 
     public static void main(String[] args) {
-        new BookForm();
+        // Test case can be added if needed
     }
 }
