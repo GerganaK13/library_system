@@ -25,7 +25,7 @@ public class BookForm extends JFrame {
         panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(new Color(245, 245, 245)); 
 
-        // --- Search panel ---
+        //Search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchLabel = new JLabel("Search Books:");
         searchLabel.setFont(new Font("Arial", Font.PLAIN, 14));
