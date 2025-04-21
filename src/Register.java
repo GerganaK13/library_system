@@ -21,8 +21,8 @@ public class Register extends JFrame {
 
         panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(new Color(245, 245, 245)); // Light gray background
-
+        panel.setBackground(new Color(245, 245, 245)); 
+        
         // Add fields
         textField1 = new JTextField(20);
         textField2 = new JTextField(20);
@@ -72,7 +72,7 @@ public class Register extends JFrame {
 
         loginInsteadButton = new JButton("Login Instead");
         loginInsteadButton.setFont(new Font("Arial", Font.BOLD, 14));
-        loginInsteadButton.setBackground(new Color(0, 102, 204));  // Blue background
+        loginInsteadButton.setBackground(new Color(0, 102, 204));  
         loginInsteadButton.setForeground(Color.WHITE);
         loginInsteadButton.setPreferredSize(new Dimension(200, 40));
         panel.add(loginInsteadButton);
@@ -85,7 +85,7 @@ public class Register extends JFrame {
             }
         });
 
-        // Image (Logo)
+        // Image
         ImageIcon registerIcon = new ImageIcon("src/photos/register.png");  // Path to the register image
         Image imgResized = registerIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
         JLabel imageLabel = new JLabel(new ImageIcon(imgResized));  // Set the resized image to JLabel
