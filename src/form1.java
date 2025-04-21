@@ -46,8 +46,7 @@ public class form1 extends JFrame { private JPanel panel1;
                 int row = table1.getEditingRow();
                 int column = table1.getEditingColumn();
                 String columnName = table1.getColumnName(column);
-                String userIDStr = (String) table1.getValueAt(row, 0); // Assuming UserID is the first column
-
+                String userIDStr = (String) table1.getValueAt(row, 0); 
                 if (!newValue.equals(oldValue)) {
                     String[] columns = {columnName};
                     String[] newValues = {newValue};
